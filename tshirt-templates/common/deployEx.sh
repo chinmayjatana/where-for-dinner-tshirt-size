@@ -47,6 +47,7 @@ then
 else
     echo ' '
     echo "Waiting for RabbitMQ instance to spin up."
+    sleep 30
     kubectl wait --for=condition=ready --timeout=300s pod -l app.kubernetes.io/name=$rabbitMQName -n $serviceNamespace 
 fi
 
