@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+
+apiVersion: bitnami.messaging.tanzu.vmware.com/v1alpha1
+kind: RabbitmqCluster
+metadata:
+  name: #@ data.values.rabbitMQName
+spec:
+  replicas: 1

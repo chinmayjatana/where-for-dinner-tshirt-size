@@ -1,0 +1,261 @@
+#@ load("@ytt:data", "data")
+
+#@ def getSupplyChainType(altType):
+#@ if data.values.useWebType == "yes":
+#@   return "web-wl"
+#@ else:
+#@   return altType
+#@ end
+#@ end
+
+
+#@ def buildDBProfileEnv():
+#@ profiles = ""
+#@ if data.values.dbType == "mysql":
+#@ profiles = "mysql"
+#@ else:
+#@ profiles = "postgres"
+#@ end
+  - name: spring_profiles_active
+    value: #@ profiles
+#@ end
+
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("web-wl")
+metadata:
+  name: where-for-dinner
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-api-gateway
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"        
+spec:       
+  carvel:
+    packageName: "where-for-dinner-api-gateway.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21"         
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-api-gateway
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end
+    
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("server-wl")
+metadata:
+  name: where-for-dinner-search
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-search
+    networking.knative.dev/visibility: cluster-local
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"       
+spec:
+  env: #@ buildDBProfileEnv()
+  carvel:
+    packageName: "where-for-dinner-search.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21" 
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-search
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end
+---
+
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("worker-wl")
+metadata:
+  name: where-for-dinner-search-proc
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-search-proc
+    networking.knative.dev/visibility: cluster-local    
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"   
+spec:
+  carvel:
+    packageName: "where-for-dinner-search-proc.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21"     
+  env: 
+  - name: spring_profiles_active
+    value: crawler,redis
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-search-proc
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end
+    
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("worker-wl")
+metadata:
+  name: where-for-dinner-notify
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-notify
+    networking.knative.dev/visibility: cluster-local    
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"  
+spec:
+  carvel:
+    packageName: "where-for-dinner-search-notify.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21" 
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-notify
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("server-wl")
+metadata:
+  name: where-for-dinner-availability
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-availability
+    networking.knative.dev/visibility: cluster-local
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"        
+spec:
+  carvel:
+    packageName: "where-for-dinner-availability.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21"     
+  env: #@ buildDBProfileEnv()
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-availability
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end 
+
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: #@ getSupplyChainType("server-wl")
+metadata:
+  name: where-for-dinner-ui
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-ui
+    networking.knative.dev/visibility: cluster-local   
+spec:
+  carvel:
+    packageName: "where-for-dinner-ui.tanzu.vmware.com"
+  build:
+    env:
+    - name: BP_NODE_RUN_SCRIPTS
+      value: build
+    - name: BP_WEB_SERVER_ROOT
+      value: dist
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-ui
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end
+---
+apiVersion: supplychains.tanzu.vmware.com/v1alpha1
+kind: server-wl
+metadata:
+  name: where-for-dinner-crawler
+  namespace: #@ data.values.workloadNamespace
+  labels:
+    app.kubernetes.io/part-of: where-for-dinner-crawler
+    apps.tanzu.vmware.com/auto-configure-actuators: "true"    
+spec:
+  carvel:
+    packageName: "where-for-dinner-crawler.tanzu.vmware.com"
+  build:
+    env:
+      - name: BP_JVM_VERSION
+        value: "21"         
+  source:
+    git:
+      url: https://github.com/vmware-tanzu/application-accelerator-samples/
+      tag: tap-1.8.0
+    subPath: where-for-dinner/where-for-dinner-crawler
+#@ if data.values.registry != "":
+  registry:
+    repository:  #@ data.values.repository
+    server: #@ data.values.registry
+#@ end
+#@ if data.values.gitOpsRepo != "":
+  gitOps:
+    url: #@ data.values.gitOpsRepo
+    branch: #@ data.values.gitOpsRepoBranch
+    subPath: #@ data.values.gitOpsRepoSubPath 
+#@ end 
