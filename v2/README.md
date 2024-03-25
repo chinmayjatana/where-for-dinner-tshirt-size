@@ -21,7 +21,7 @@ output to a new sub-directory using the naming pattern `<size>-<workload namespa
 the Where For Dinner application meaning this sub-directory can be archived for later use.
 
 
-### Apply Deployment Configuration to you TAP Cluster
+### Apply Build Configuration to you TAP Cluster
 
 You will be given an option to apply the build configuration at the end of the configuration generation process, or you can execute at a later time.  A file named `runInstall.sh` will be created in the new sub directory, and you can execute it by navigating the sub-directory and running the following command:
 
