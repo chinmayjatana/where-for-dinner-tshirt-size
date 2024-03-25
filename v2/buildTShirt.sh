@@ -240,22 +240,39 @@ fi
 
 printf '\nGenerating configuration files into directory %s\n' "'$outputDir'"
 
-
-
 ytt -f ./tshirt-templates/common/rmqCluster.yaml -v rabbitMQName=$rabbitMQName -v serviceNamespace=$serviceNamespace >> ./$gitopsDir/rmqCluster.yaml
 ytt -f ./tshirt-templates/$tshirtSize/workloads.yaml -v workloadNamespace=$workloadNamespace -v dbType=$dbType -v useWebType=$useWebType -v registry=$registry \
  -v  repository=$repository -v gitOpsRepo=$gitOpsRepo -v gitOpsRepoBranch=$gitOpsRepoBranch -v gitOpsRepoSubPath=$gitOpsRepoSubPath  >> ./$outputDir/workloads.yaml
 
+#
+# --- TEMPORARY SERVICE BINDING RESOURCES; WILL MOVE TO ServiceInstanceBinding WHEN AVAILABILE ---
+#
+serviceType=web;
+if [ "$useWebType" != "yes" ] 
+then
+ serviceType=deployment
+fi
+
+ytt -f ./tshirt-templates/common/rmqBindingTemplate.yaml -v name=where-for-dinner-search -v rabbitMQName=$rabbitMQName -v serviceType=$serviceType >> ./$gitopsDir/searchRmqBinding.yaml
+ytt -f ./tshirt-templates/common/rmqBindingTemplate.yaml -v name=where-for-dinner-search-proc -v rabbitMQName=$rabbitMQName -v serviceType=$serviceType >> ./$gitopsDir/searchProcRmqBinding.yaml
+ytt -f ./tshirt-templates/common/rmqBindingTemplate.yaml -v name=where-for-dinner-availability -v rabbitMQName=$rabbitMQName -v serviceType=$serviceType >> ./$gitopsDir/availabilityRmqBinding.yaml  
+
 if [ "$tshirtSize" == "medium" ] || [ "$tshirtSize" == "large" ]
 then
   dbInstanceFile=$dbType'Instance.yaml'
+  dbBindingFile=$dbType'BindingTemplate.yaml'
 
   ytt -f ./tshirt-templates/medium/$dbInstanceFile -v dbName=$dbName -v serviceNamespace=$serviceNamespace >> ./$gitopsDir/$dbInstanceFile
+  ytt -f ./tshirt-templates/medium/$dbBindingFile -v name=where-for-dinner-availability -v dbName=$dbName -v serviceType=$serviceType >> ./$gitopsDir/availabilityDbBinding.yaml  
+  ytt -f ./tshirt-templates/medium/$dbBindingFile -v name=where-for-dinner-search -v dbName=$dbName -v serviceType=$serviceType >> ./$gitopsDir/searchDbBinding.yaml    
+  ytt -f ./tshirt-templates/common/rmqBindingTemplate.yaml -v name=where-for-dinner-notify -v rabbitMQName=$rabbitMQName -v serviceType=$serviceType >> ./$gitopsDir/notifyRmqBinding.yaml  
+
 fi
 
 if [ "$tshirtSize" == "large" ]
 then
   ytt -f ./tshirt-templates/large/redis.yaml -v redisName=$redisName -v workloadNamespace=$workloadNamespace >> ./$gitopsDir/redis.yaml
+  ytt -f ./tshirt-templates/large/redisBindingTemplate.yaml -v name=where-for-dinner-search-proc -v redisName=$redisName -v serviceType=$serviceType >> ./$gitopsDir/searchProcCacheBinding.yaml    
 fi
 
 # Write to an install file

@@ -1,0 +1,27 @@
+#@ load("@ytt:data", "data")
+
+#@ def buildWorkloadTarget():
+#@ profiles = ""
+#@ if data.values.serviceType == "web":
+  apiVersion: serving.knative.dev/v1
+  kind: Service
+#@ else:
+  apiVersion: apps/v1
+  kind: Deployment
+#@ end
+  name: #@ data.values.name
+#@ end
+
+---
+apiVersion: servicebinding.io/v1
+kind: ServiceBinding
+metadata:
+  name: #@ data.values.name + '-rmq'
+spec:
+  name: rmq
+  replicas: 1
+  service:
+    apiVersion: bitnami.messaging.tanzu.vmware.com/v1alpha1
+    kind: RabbitmqCluster
+    name: #@ data.values.rabbitMQName
+  workload: #@ buildWorkloadTarget()

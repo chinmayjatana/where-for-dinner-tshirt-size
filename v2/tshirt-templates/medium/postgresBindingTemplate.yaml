@@ -1,0 +1,27 @@
+#@ load("@ytt:data", "data")
+
+#@ def buildWorkloadTarget():
+#@ profiles = ""
+#@ if data.values.serviceType == "web":
+  apiVersion: serving.knative.dev/v1
+  kind: Service
+#@ else:
+  apiVersion: apps/v1
+  kind: Deployment
+#@ end
+  name: #@ data.values.name
+#@ end
+
+---
+apiVersion: servicebinding.io/v1
+kind: ServiceBinding
+metadata:
+  name: #@ data.values.name + '-db'
+spec:
+  name: db
+  replicas: 1
+  service:
+    apiVersion: bitnami.database.tanzu.vmware.com/v1alpha1
+    kind: PostgreSQLInstance
+    name: #@ data.values.dbName
+  workload: #@ buildWorkloadTarget()
