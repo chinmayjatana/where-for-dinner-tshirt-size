@@ -71,7 +71,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"       
+        value: "21"       
   source:
     git:
       url: https://github.com/vmware-tanzu/application-accelerator-samples.git
@@ -115,7 +115,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"       
+        value: "21"       
   source:
     git:
       url: https://github.com/vmware-tanzu/application-accelerator-samples.git
@@ -139,7 +139,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"       
+        value: "21"       
   params: #@ buildParams(8080,False)
   env: 
   - name: spring_profiles_active
@@ -185,7 +185,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"           
+        value: "21"           
   params: #@ buildParams(8080,False)
   serviceClaims: 
   - name: rmq
@@ -222,7 +222,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"             
+        value: "21"             
   env: #@ buildDBProfileEnv()
   params: #@ buildParams(8080,True)
   serviceClaims:
@@ -310,7 +310,7 @@ spec:
   build:
     env:
       - name: BP_JVM_VERSION
-        value: "17"      
+        value: "21"      
   source:
     git:
       url: https://github.com/vmware-tanzu/application-accelerator-samples.git
